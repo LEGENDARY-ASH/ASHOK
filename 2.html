@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Roll Number</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #333;
+        }
+        textarea, button, select {
+            display: block;
+            width: 100%;
+            max-width: 600px;
+            margin: 10px 0;
+            padding: 10px;
+            font-size: 16px;
+        }
+        textarea {
+            height: 100px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        select {
+            display: none;
+        }
+        #response {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 600px;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>JSON Processor</h1>
+    <textarea id="jsonInput" placeholder='Enter JSON'></textarea>
+    <button id="submitButton">Submit</button>
+    
+    <select id="dropdownMenu" multiple>
+        <option value="alphabets">Alphabets</option>
+        <option value="numbers">Numbers</option>
+        <option value="highestAlphabet">Highest Alphabet</option>
+    </select>
+    
+    <div id="response"></div>
+    
+    <script>
+        document.getElementById('submitButton').addEventListener('click', async () => {
+            const input = document.getElementById('jsonInput').value;
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            const responseDiv = document.getElementById('response');
+            
+            try {
+                // Validate JSON
+                const jsonData = JSON.parse(input);
+                
+                // Make API call
+                const response = await fetch('https://testbfhl.herokuapp.com/bfhl', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(jsonData),
+                });
+
+                const data = await response.json();
+
+                // Check if response was successful
+                if (data.is_success) {
+                    dropdownMenu.style.display = 'block';
+                    dropdownMenu.addEventListener('change', () => displayResponse(data));
+                    displayResponse(data);
+                } else {
+                    responseDiv.innerHTML = '<p class="error">Operation failed.</p>';
+                }
+            } catch (error) {
+                responseDiv.innerHTML = '<p class="error">Invalid JSON format or API error.</p>';
+            }
+        });
+
+        function displayResponse(data) {
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            const responseDiv = document.getElementById('response');
+            
+            const selectedOptions = Array.from(dropdownMenu.selectedOptions).map(option => option.value);
+            
+            let content = '';
+            
+            if (selectedOptions.includes('alphabets') && data.alphabets) {
+                content += `<div>Alphabets: ${data.alphabets.join(', ')}</div>`;
+            }
+            
+            if (selectedOptions.includes('numbers') && data.numbers) {
+                content += `<div>Numbers: ${data.numbers.join(', ')}</div>`;
+            }
+            
+            if (selectedOptions.includes('highestAlphabet') && data.highest_alphabet) {
+                content += `<div>Highest Alphabet: ${data.highest_alphabet}</div>`;
+            }
+            
+            responseDiv.innerHTML = content;
+        }
+    </script>
+</body>
+</html>
